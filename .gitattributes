@@ -1,0 +1,7 @@
+# Zeilenenden einheitlich halten, Binärdateien nie verändern
+* text=auto
+*.tar.gz binary
+*.png binary
+*.wav binary
+# Die Vosk-Datei ist sehr groß und maschinell erzeugt: keine Textvergleiche anzeigen
+lib/vosk-wasm.js -diff linguist-vendored

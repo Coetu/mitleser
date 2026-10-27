@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mitleser – Tests</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; padding: 16px; font: 15px/1.45 -apple-system, system-ui, sans-serif; background: #111418; color: #e8e8e8; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    #summary { margin: 8px 0 16px; font-weight: 600; }
+    .file { margin-top: 14px; color: #9ab; font-weight: 600; }
+    .ok { color: #7fd17f; }
+    .bad { color: #ff8080; }
+    .err { white-space: pre-wrap; font-size: 13px; color: #ffb3b3; margin: 2px 0 6px 18px; }
+    .row { margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Mitleser – automatische Tests</h1>
+  <div id="summary">Tests laufen …</div>
+  <div id="out"></div>
+  <script type="module">
+    import { files } from './all.js';
+    import { setFile, run } from './harness.js';
+
+    const out = document.getElementById('out');
+    const summaryEl = document.getElementById('summary');
+    const add = (cls, text) => {
+      const div = document.createElement('div');
+      div.className = cls;
+      div.textContent = text;
+      out.appendChild(div);
+    };
+
+    let loadErrors = 0;
+    for (const file of files) {
+      setFile(file);
+      try {
+        await import(`./${file}`);
+      } catch (error) {
+        loadErrors++;
+        add('bad', `✗ ${file} konnte nicht geladen werden`);
+        add('err', String(error && error.stack ? error.stack : error));
+      }
+    }
+
+    let lastFile = '';
+    const summary = await run((r) => {
+      if (r.file !== lastFile) {
+        lastFile = r.file;
+        add('file', r.file);
+      }
+      add('row ' + (r.ok ? 'ok' : 'bad'), `${r.ok ? '✓' : '✗'} ${r.name}`);
+      if (!r.ok) add('err', String(r.error && r.error.message ? r.error.message : r.error));
+    });
+    const failed = summary.failed + loadErrors;
+    summaryEl.textContent = `${summary.passed} bestanden, ${failed} fehlgeschlagen`;
+    summaryEl.className = failed ? 'bad' : 'ok';
+  </script>
+</body>
+</html>

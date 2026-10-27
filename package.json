@@ -1,0 +1,11 @@
+{
+  "name": "mitleser",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Präsentationshilfe fürs iPad: färbt mitgelesene Wörter per Offline-Spracherkennung ein",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-node.js"
+  },
+  "license": "UNLICENSED"
+}

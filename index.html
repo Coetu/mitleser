@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de" data-view="prep">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mitleser</title>
+  <meta name="description" content="Präsentationshilfe fürs iPad: färbt beim Vorlesen die gelesenen Wörter ein – offline per Spracherkennung auf dem Gerät.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <!-- Zahlen im Vortragstext nicht als Telefonnummern verlinken (würde das Antippen stören) -->
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mitleser">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <noscript>
+    <p class="noscript">Mitleser braucht JavaScript. Bitte JavaScript erlauben
+      (iPad: Einstellungen › Apps › Safari › Erweitert › JavaScript) und die Seite neu laden.</p>
+  </noscript>
+
+  <!-- ============================== Ansicht 1: Vorbereitung ============================== -->
+  <main id="viewPrep" class="view view-prep">
+    <header class="prep-header">
+      <img class="app-icon" src="icons/icon-192.png" alt="" width="52" height="52">
+      <div>
+        <h1>Mitleser</h1>
+        <p class="tagline">Liest beim Vortrag mit und färbt die gesprochenen Wörter ein – offline auf dem iPad.</p>
+      </div>
+    </header>
+
+    <div class="prep-grid">
+      <!-- Vortragstext -->
+      <section class="card card-script" aria-labelledby="scriptLabel">
+        <div class="card-head">
+          <label id="scriptLabel" class="card-title" for="script">Vortragstext</label>
+          <span id="saveState" class="save-state" aria-live="polite"></span>
+        </div>
+        <textarea id="script" class="script-input" autocorrect="off" autocapitalize="sentences" spellcheck="true"
+          aria-describedby="scriptHint"
+          placeholder="Vortragstext hier eingeben oder einfügen …&#10;&#10;Eine Leerzeile beginnt einen neuen Abschnitt. In der Präsentation wird immer ein Abschnitt gezeigt.&#10;&#10;Mit „Importieren …“ lässt sich auch eine .txt-Datei laden."></textarea>
+        <p id="scriptHint" class="hint">Leerzeile = neuer Abschnitt. Oder Abschnitte mit einer Zeile „---“ trennen – dann dürfen sie Leerzeilen enthalten.</p>
+        <div class="script-footer">
+          <span id="counts" class="counts" aria-live="polite">0 Abschnitte · 0 Wörter</span>
+          <div class="button-row">
+            <button id="btnImport" type="button" class="btn">Importieren …</button>
+            <button id="btnExport" type="button" class="btn">Exportieren</button>
+          </div>
+        </div>
+        <p id="exportNotice" class="notice" role="status" hidden></p>
+        <!-- unsichtbar; wird über „Importieren …“ geöffnet -->
+        <input id="fileImport" class="visually-hidden" type="file" accept=".txt,text/plain" tabindex="-1">
+      </section>
+
+      <div class="prep-side">
+        <!-- Start -->
+        <section class="card card-start" aria-label="Präsentation">
+          <button id="btnStart" type="button" class="btn btn-primary btn-large">Präsentation starten</button>
+          <button id="btnResume" type="button" class="btn btn-large" hidden>Bei Abschnitt 2 fortsetzen</button>
+          <p id="startMessage" class="start-message" hidden>Bitte zuerst einen Vortragstext eingeben.</p>
+          <details class="howto">
+            <summary>Bedienung während der Präsentation</summary>
+            <ul>
+              <li><b>Rechts tippen</b> <span class="keys">→ · Bild↓ · Leertaste</span><br>nächster Abschnitt</li>
+              <li><b>Links tippen</b> <span class="keys">← · Bild↑</span><br>Färbung zurücksetzen – noch einmal: vorheriger Abschnitt</li>
+              <li><b>Mitte tippen</b> <span class="keys">M</span><br>Mikrofon pausieren oder fortsetzen</li>
+              <li><b>‹ Vorbereitung</b> oben links<br>Präsentation beenden (Mikrofon aus)</li>
+            </ul>
+            <p class="hint">Der Bildschirm bleibt während der Präsentation an. Fernbedienungen (Presenter) mit Bild↑/Bild↓ funktionieren auch.</p>
+          </details>
+        </section>
+
+        <!-- Spracherkennung -->
+        <section class="card card-speech" aria-labelledby="speechTitle">
+          <label class="setting setting-head" for="optRecognition">
+            <span class="setting-text">
+              <span id="speechTitle" class="card-title">Spracherkennung</span>
+              <span class="setting-desc">Färbt beim Vorlesen die gesprochenen Wörter ein. Text und Ton bleiben auf dem iPad.</span>
+            </span>
+            <input id="optRecognition" type="checkbox" class="switch" role="switch">
+          </label>
+
+          <div id="asrStatus" class="status" data-state="off" role="status">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="status-text"><span id="asrStatusText">Spracherkennung aus</span><span id="asrPercent" aria-hidden="true"></span></span>
+          </div>
+          <div id="asrProgress" class="progress" hidden><div class="progress-bar"></div></div>
+          <p id="asrHint" class="hint" hidden>Einmalig ca. 46 MB – danach offline verfügbar</p>
+          <button id="btnRetry" type="button" class="btn" hidden>Erneut versuchen</button>
+
+          <div class="mic-test">
+            <button id="btnMicTest" type="button" class="btn">Mikrofon testen</button>
+            <div id="micTestPanel" class="mic-test-panel" hidden>
+              <div class="meter" aria-hidden="true"><div id="micTestLevel" class="meter-bar"></div></div>
+              <p id="micTestOut" class="mic-test-out" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <label class="setting" for="optAutoAdvance">
+            <span class="setting-text">
+              <span class="setting-name">Automatisch weiterblättern</span>
+              <span class="setting-desc">Am Ende eines Abschnitts nach 1,5 Sekunden zum nächsten (nur mit Spracherkennung).</span>
+            </span>
+            <input id="optAutoAdvance" type="checkbox" class="switch" role="switch">
+          </label>
+        </section>
+
+        <!-- Darstellung -->
+        <section class="card card-display" aria-labelledby="displayTitle">
+          <h2 id="displayTitle" class="card-title">Darstellung</h2>
+          <div class="range-head">
+            <label for="fontSize" class="setting-name">Schriftgröße</label>
+            <output id="fontSizeValue" class="range-value" for="fontSize">48 px</output>
+          </div>
+          <input id="fontSize" type="range" min="24" max="120" step="2" value="48">
+          <div class="font-preview" aria-hidden="true">
+            <p id="fontPreview" class="font-preview-line"><span class="tok read">So</span> <span class="tok read">sieht</span> <span class="tok next">der</span> <span class="tok">Text</span> <span class="tok">in</span> <span class="tok">der</span> <span class="tok">Präsentation</span> <span class="tok">aus.</span></p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <footer class="prep-footer">
+      <p id="installTip" class="install-tip" hidden>Tipp: In Safari über <b>Teilen › Zum Home-Bildschirm</b> hinzufügen – dann startet Mitleser im Vollbild und auch offline.</p>
+      <p id="wakeTip" class="install-tip" hidden>Auf diesem iPad (iPadOS älter als 18.4) bleibt der Bildschirm in der Home-Bildschirm-App nicht von selbst an: <b>Einstellungen › Anzeige &amp; Helligkeit › Automatische Sperre › Nie</b>.</p>
+      <div class="footer-row">
+        <span id="offlineState" class="offline-state" data-state="no">
+          <span class="dot" aria-hidden="true"></span><span id="offlineText">Noch nicht offline verfügbar</span>
+        </span>
+        <span id="updateNotice" class="update-notice" hidden>
+          Neue Version geladen. <button id="btnReload" type="button" class="link-btn">Jetzt neu laden</button>
+        </span>
+        <span class="version">Version <span id="appVersion">–</span></span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ============================== Ansicht 2: Präsentation ============================== -->
+  <section id="viewPresent" class="view view-present" hidden aria-label="Präsentation">
+    <div class="topbar">
+      <button id="btnBack" type="button" class="topbar-btn">‹ Vorbereitung</button>
+      <div id="counter" class="counter" aria-live="polite">1 / 1</div>
+      <button id="micStatus" type="button" class="mic-status" data-state="off" aria-label="Mikrofon: aus">
+        <span class="dot" aria-hidden="true"></span><span id="micStatusText" class="mic-label">aus</span>
+      </button>
+    </div>
+    <div class="stage">
+      <!-- Der Text; Tippen links / Mitte / rechts steuert die Präsentation -->
+      <div id="text" class="text" tabindex="-1" aria-label="Vortragstext">
+        <div id="textInner" class="text-inner"></div>
+      </div>
+      <!-- Hinweis beim Start (verschwindet nach ca. 4 Sekunden, Tippen geht trotzdem durch) -->
+      <div id="hintOverlay" class="hint-overlay" aria-hidden="true">
+        <div class="hint-zone">
+          <span class="hint-title">&#x25C0;&#xFE0E; Zurücksetzen / zurück</span>
+          <span class="hint-keys">← / Bild↑</span>
+        </div>
+        <div class="hint-zone">
+          <span id="hintMic" class="hint-title">Mikrofon an/aus</span>
+          <span class="hint-keys">M</span>
+        </div>
+        <div class="hint-zone">
+          <span class="hint-title">Weiter &#x25B6;&#xFE0E;</span>
+          <span class="hint-keys">→ / Bild↓ / Leertaste</span>
+        </div>
+      </div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+</body>
+</html>

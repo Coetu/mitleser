@@ -1,0 +1,15 @@
+# Systemdateien
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Werkzeuge
+node_modules/
+__pycache__/
+
+# Eigene Vortragstexte gehören nicht ins öffentliche Repo
+*.privat.txt
+privat/
+
+# Vorbereitete Commit-Nachricht (nur zum Kopieren, wird nicht mit hochgeladen)
+COMMIT_MESSAGE.txt
